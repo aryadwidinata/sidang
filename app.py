@@ -3,6 +3,9 @@ from datetime import datetime, time, date
 import firebase_admin
 from firebase_admin import credentials, firestore
 import os
+from firebase_config import db
+from firebase_admin import firestore
+# ... sisa kode app.py lainnya
 
 # --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(
@@ -146,12 +149,31 @@ def apply_custom_css():
 
 apply_custom_css()
 
-# --- 3. INISIALISASI FIREBASE ---
+# --- 3. INISIALISASI FIREBASE (HYBRID: LOCAL + STREAMLIT CLOUD) ---
 @st.cache_resource
 def init_firebase():
     if not firebase_admin._apps:
-        cred = credentials.Certificate("serviceAccountKey.json")
-        firebase_admin.initialize_app(cred)
+        try:
+            # 1. Coba baca dari Streamlit Secrets (Format TOML untuk Cloud Deployment)
+            key_dict = dict(st.secrets["firebase"])
+            
+            # Memastikan karakter newline (\n) pada private_key terbaca sempurna
+            if "private_key" in key_dict:
+                key_dict["private_key"] = key_dict["private_key"].replace("\\n", "\n")
+                
+            cred = credentials.Certificate(key_dict)
+            firebase_admin.initialize_app(cred)
+            
+        except Exception:
+            # 2. Jika Secrets tidak ditemukan, gunakan file lokal (Untuk Testing/Lokal)
+            file_path = "serviceAccountKey.json"
+            if os.path.exists(file_path):
+                cred = credentials.Certificate(file_path)
+                firebase_admin.initialize_app(cred)
+            else:
+                st.error("❌ Kredensial Firebase tidak ditemukan baik di Secrets maupun file lokal!")
+                st.stop()
+                
     return firestore.client()
 
 db = init_firebase()
@@ -241,7 +263,7 @@ else:
 
 menu = st.sidebar.radio(
     "Navigasi Menu:",
-    ["Dashboard Jadwal", "Antrian Usulan (FIFO)", "Ajukan Rapat Baru", "Login Admin"]
+    ["Dashboard Jadwal", "Antrian Usulan", "Ajukan Rapat Baru", "Login Admin"]
 )
 
 # ==========================================
