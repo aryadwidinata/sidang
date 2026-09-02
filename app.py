@@ -229,7 +229,7 @@ menu = st.sidebar.radio(
 # 6. DASHBOARD JADWAL (TERKONFIRMASI)
 # ==========================================
 if menu == "Dashboard Jadwal":
-    st.title("📅 Dashboard Jadwal Rapat Resmi")
+    st.title("Dashboard Jadwal Rapat Resmi")
     st.caption("Daftar agenda kegiatan rapat DPRD Kabupaten Deli Serdang yang telah terkonfirmasi.")
     st.markdown("---")
     
@@ -305,7 +305,7 @@ elif menu == "Antrian Usulan":
 # 8. AJUKAN RAPAT BARU (USER)
 # ==========================================
 elif menu == "Ajukan Rapat Baru":
-    st.title("➕ Form Pengajuan Rapat Baru")
+    st.title("Form Pengajuan Rapat Baru")
     st.caption("Isi formulir di bawah ini untuk mengusulkan agenda rapat baru.")
     st.markdown("<br>", unsafe_allow_html=True)
     
