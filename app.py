@@ -4,46 +4,41 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import os
 from firebase_config import db
-from firebase_admin import firestore
-# ... sisa kode app.py lainnya
 
-# --- 1. KONFIGURASI HALAMAN ---
+# --- 1. KONFIGURASI HALAMAN (PAGE ICON MENGGUNAKAN LOGO) ---
+logo_path = "assets/logo.png" if os.path.exists("assets/logo.png") else ("static/logo.png" if os.path.exists("static/logo.png") else "📅")
+
 st.set_page_config(
     page_title="Penjadwalan Rapat - DPRD Kab. Deli Serdang",
-    page_icon="📅",
+    page_icon=logo_path,
     layout="wide"
 )
 
-# --- 2. CUSTOM CSS MODERN (TOMBOL LEBIH COMPACT & PAS) ---
+# --- 2. CUSTOM CSS MODERN ---
 def apply_custom_css():
     st.markdown(
         """
         <style>
-        /* Import Font Modern Inter */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
         html, body, [class*="css"] {
             font-family: 'Inter', sans-serif;
         }
 
-        /* Background Utama Modern */
         .stApp {
             background-color: #F8FAFC !important;
         }
 
-        /* Top Bar Header Transparan */
         [data-testid="stHeader"] {
             background-color: rgba(248, 250, 252, 0) !important;
         }
 
-        /* Sidebar Styling Clean */
         [data-testid="stSidebar"] {
             background-color: #FFFFFF !important;
             border-right: 1px solid #E2E8F0 !important;
             padding-top: 1rem;
         }
 
-        /* Header / Judul Utama */
         h1 {
             color: #C2410C !important;
             font-weight: 700 !important;
@@ -51,12 +46,10 @@ def apply_custom_css():
             letter-spacing: -0.5px;
         }
 
-        /* Subtitle / Caption */
         .stCaption, p {
             color: #475569 !important;
         }
 
-        /* --- CARD JADWAL & CONTAINER STYLING --- */
         div[data-testid="stVerticalBlockBorderWrapper"] {
             background-color: #FFFFFF !important;
             border: 1px solid #FED7AA !important;
@@ -72,7 +65,6 @@ def apply_custom_css():
             box-shadow: 0 8px 20px rgba(234, 88, 12, 0.1) !important;
         }
 
-        /* --- FORM & INPUT STYLING --- */
         [data-testid="stForm"] {
             background-color: #FFFFFF !important;
             border: 1px solid #E2E8F0 !important;
@@ -99,25 +91,23 @@ def apply_custom_css():
             box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.2) !important;
         }
 
-        /* --- BUTTON STYLING (UKURAN PROPORSIONAL & TIDAK RAKSASA) --- */
         div.stButton > button, 
         div[data-testid="stFormSubmitButton"] > button {
             background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%) !important;
             color: #FFFFFF !important;
             border: none !important;
             border-radius: 8px !important;
-            padding: 8px 20px !important; /* Diperkecil dari 12px 24px */
+            padding: 8px 20px !important;
             font-weight: 600 !important;
             font-size: 0.9rem !important;
             box-shadow: 0 2px 6px rgba(234, 88, 12, 0.2) !important;
             transition: all 0.2s ease !important;
-            width: auto !important; /* Dibuat pas dengan isi teks, tidak melebar melar */
-            min-width: 200px !important; /* Lebar minimal pas di mata */
+            width: auto !important;
+            min-width: 200px !important;
             display: block !important;
-            margin: 0 auto !important; /* Posisi di tengah */
+            margin: 0 auto !important;
         }
 
-        /* Memastikan Teks & Ikon di Dalam Tombol Berwarna Putih Clear */
         div.stButton > button *, 
         div[data-testid="stFormSubmitButton"] > button * {
             color: #FFFFFF !important;
@@ -125,7 +115,6 @@ def apply_custom_css():
             font-weight: 600 !important;
         }
 
-        /* Hover State Tombol */
         div.stButton > button:hover, 
         div[data-testid="stFormSubmitButton"] > button:hover {
             background: linear-gradient(135deg, #C2410C 0%, #9A3412 100%) !important;
@@ -133,7 +122,6 @@ def apply_custom_css():
             transform: translateY(-1px);
         }
 
-        /* Radio Navigasi Sidebar */
         div[role="radiogroup"] label {
             padding: 8px 12px;
             border-radius: 8px;
@@ -149,36 +137,7 @@ def apply_custom_css():
 
 apply_custom_css()
 
-# --- 3. INISIALISASI FIREBASE (HYBRID: LOCAL + STREAMLIT CLOUD) ---
-@st.cache_resource
-def init_firebase():
-    if not firebase_admin._apps:
-        try:
-            # 1. Coba baca dari Streamlit Secrets (Format TOML untuk Cloud Deployment)
-            key_dict = dict(st.secrets["firebase"])
-            
-            # Memastikan karakter newline (\n) pada private_key terbaca sempurna
-            if "private_key" in key_dict:
-                key_dict["private_key"] = key_dict["private_key"].replace("\\n", "\n")
-                
-            cred = credentials.Certificate(key_dict)
-            firebase_admin.initialize_app(cred)
-            
-        except Exception:
-            # 2. Jika Secrets tidak ditemukan, gunakan file lokal (Untuk Testing/Lokal)
-            file_path = "serviceAccountKey.json"
-            if os.path.exists(file_path):
-                cred = credentials.Certificate(file_path)
-                firebase_admin.initialize_app(cred)
-            else:
-                st.error("❌ Kredensial Firebase tidak ditemukan baik di Secrets maupun file lokal!")
-                st.stop()
-                
-    return firestore.client()
-
-db = init_firebase()
-
-# --- 4. FUNGSI DATABASE ---
+# --- 3. FUNGSI DATABASE ---
 def tambah_usulan_antrian(judul, tanggal, waktu_mulai, ruangan, agenda=""):
     data = {
         "judul": judul,
@@ -241,11 +200,11 @@ def hapus_jadwal(doc_id):
         st.error(f"Gagal menghapus data: {e}")
         return False
 
-# --- 5. SESSION STATE ---
+# --- 4. SESSION STATE ---
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
-# --- 6. SIDEBAR NAVIGASI & LOGO ---
+# --- 5. SIDEBAR NAVIGASI & LOGO ---
 if os.path.exists("assets/logo.png"):
     st.sidebar.image("assets/logo.png", use_container_width=True)
 elif os.path.exists("static/logo.png"):
@@ -267,7 +226,7 @@ menu = st.sidebar.radio(
 )
 
 # ==========================================
-# 7. DASHBOARD JADWAL (TERKONFIRMASI)
+# 6. DASHBOARD JADWAL (TERKONFIRMASI)
 # ==========================================
 if menu == "Dashboard Jadwal":
     st.title("📅 Dashboard Jadwal Rapat Resmi")
@@ -296,11 +255,11 @@ if menu == "Dashboard Jadwal":
                                 st.rerun()
 
 # ==========================================
-# 8. ANTRIAN USULAN (URUTAN FIFO)
+# 7. ANTRIAN USULAN
 # ==========================================
-elif menu == "Antrian Usulan (FIFO)":
+elif menu == "Antrian Usulan":
     st.title("⏳ Antrian Usulan Rapat")
-    st.caption("Daftar pengajuan rapat yang menunggu persetujuan Admin (Sistem FIFO).")
+    st.caption("Daftar pengajuan rapat yang menunggu persetujuan Admin.")
     st.markdown("---")
     
     antrian_list = get_antrian_fifo()
@@ -343,7 +302,7 @@ elif menu == "Antrian Usulan (FIFO)":
                     st.info("🔒 *Hanya Admin yang dapat menyetujui antrian ini.*")
 
 # ==========================================
-# 9. AJUKAN RAPAT BARU (USER)
+# 8. AJUKAN RAPAT BARU (USER)
 # ==========================================
 elif menu == "Ajukan Rapat Baru":
     st.title("➕ Form Pengajuan Rapat Baru")
@@ -367,12 +326,12 @@ elif menu == "Ajukan Rapat Baru":
         if submit:
             if judul and ruangan:
                 tambah_usulan_antrian(judul, tanggal, waktu, ruangan, agenda)
-                st.success(" Usulan rapat berhasil dikirim! Silakan pantau di menu 'Antrian Usulan (FIFO)'.")
+                st.success("Usulan rapat berhasil dikirim! Silakan pantau di menu 'Antrian Usulan'.")
             else:
                 st.error("Judul Rapat dan Ruangan wajib diisi!")
 
 # ==========================================
-# 10. LOGIN KHUSUS ADMIN
+# 9. LOGIN KHUSUS ADMIN
 # ==========================================
 elif menu == "Login Admin":
     st.title("🔒 Login Portal Admin")
