@@ -1,15 +1,38 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
 import streamlit as st
+import os
+import json
 
-# Inisialisasi Firebase menggunakan Streamlit Secrets
-if not firebase_admin._apps:
-    # Membaca section [firebase] dari Secrets
-    key_dict = dict(st.secrets["firebase"])
-    cred = credentials.Certificate(key_dict)
-    firebase_admin.initialize_app(cred)
+@st.cache_resource
+def get_db():
+    if not firebase_admin._apps:
+        file_path = "serviceAccountKey.json"
+        
+        # 1. Coba baca dari file lokal jika ada dan isinya valid
+        if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+            try:
+                cred = credentials.Certificate(file_path)
+                firebase_admin.initialize_app(cred)
+            except json.decoder.JSONDecodeError:
+                # Jika file lokal rusak, lewati ke st.secrets
+                pass
 
-db = firestore.client()
+        # 2. Jika lokal gagal/tidak ada, gunakan Streamlit Secrets (TOML)
+        if not firebase_admin._apps:
+            try:
+                key_dict = dict(st.secrets["firebase"])
+                if "private_key" in key_dict:
+                    key_dict["private_key"] = key_dict["private_key"].replace("\\n", "\n")
+                cred = credentials.Certificate(key_dict)
+                firebase_admin.initialize_app(cred)
+            except Exception as e:
+                st.error("❌ Gagal menginisialisasi Firebase. Periksa file serviceAccountKey.json lokal atau menu Secrets di Streamlit Cloud.")
+                st.stop()
+
+    return firestore.client()
+
+db = get_db()
 
 # --- OPERASI FIRESTORE ---
 
