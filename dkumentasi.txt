@@ -1,0 +1,31 @@
+Dokumentasi Sistem Penjadwalan Rapat DPRD Kabupaten Deli Serdang
+
+1. Ikhtisar Sistem
+Sistem Penjadwalan Rapat berbasis web ini dikembangkan menggunakan Streamlit dan terintegrasi dengan basis data Firebase Firestore. Aplikasi ini dirancang untuk memfasilitasi transparansi jadwal sidang, pengelolaan antrean usulan berbasis First-In, First-Out (FIFO), serta validasi ruangan secara real-time guna menghindari konflik jadwal rapat.
+
+2. Struktur Navigasi & Fitur Utama
+
+Dashboard Jadwal: Menampilkan daftar agenda kegiatan rapat resmi DPRD Kabupaten Deli Serdang yang telah dikonfirmasi dan disetujui oleh admin. Pengguna publik maupun admin dapat melihat tanggal, waktu, ruangan, dan detail agenda rapat.
+
+Antrean Usulan (FIFO): Menampung daftar pengajuan rapat baru dari pengguna umum. Sistem mengurutkan usulan berdasarkan waktu masuk (request_timestamp). Admin memiliki hak akses untuk menyetujui (ACC) atau menolak usulan tersebut.
+
+Ajukan Rapat Baru: Formulir mandiri bagi pengguna untuk mendaftarkan jadwal rapat baru ke dalam sistem antrean dengan melengkapi informasi judul, tanggal, waktu mulai, ruangan, dan rincian agenda.
+
+Login Admin: Portal khusus pengelola sistem untuk mengaktifkan hak akses administratif (menghapus jadwal, menyetujui antrean, dan menolak usulan).
+
+3. Arsitektur Teknis & Ketergantungan
+Aplikasi ini berjalan di atas ekosistem Python dengan dependensi utama yang terdaftar pada file requirements.txt:
+
+streamlit: Framework antarmuka pengguna berbasis web.
+
+firebase-admin: Pustaka penghubung resmi Google Cloud Firestore untuk manajemen basis data cloud.
+
+4. Panduan Deployment (Streamlit Cloud)
+
+Penyimpanan Repositori: Pastikan seluruh kode sumber (app.py, folder aset logo, dan requirements.txt) sudah diunggah ke repositori GitHub. Pastikan file kredensial sensitif (serviceAccountKey.json) tidak diikutkan ke publik demi keamanan data.
+
+Konfigurasi Environment / Secrets: Masukkan isi kredensial Firebase melalui menu pengaturan Secrets di dashboard Streamlit Cloud agar aplikasi dapat terhubung secara aman ke basis data Firestore.
+
+Build & Run: Streamlit Cloud secara otomatis membaca file requirements.txt, menginstal dependensi yang dibutuhkan, dan menjalankan skrip utama app.py.
+
+cara jalankan ofline ///  streamlit run app.py
